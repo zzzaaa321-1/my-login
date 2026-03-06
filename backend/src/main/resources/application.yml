@@ -1,0 +1,40 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: my-login-backend
+  
+  # 安全配置
+  security:
+    user:
+      name: admin
+      password: admin123
+
+# JWT 配置
+jwt:
+  secret: mySuperSecretKeyForJWTTokenGeneration12345
+  expiration: 86400000 # 24小时
+
+# 日志配置
+logging:
+  level:
+    com.example.mylogin: DEBUG
+    org.springframework.security: INFO
+  file:
+    name: logs/application.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# 开发配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
