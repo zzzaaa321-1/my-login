@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务访问测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 My Login 服务访问测试</h1>
+    
+    <div class="container">
+        <h2>服务状态</h2>
+        
+        <div id="frontend-status" class="status">
+            正在检查前端服务...
+        </div>
+        
+        <div id="backend-status" class="status">
+            正在检查后端服务...
+        </div>
+        
+        <button onclick="testAllServices()">重新测试所有服务</button>
+    </div>
+    
+    <div class="container">
+        <h2>访问链接</h2>
+        <ul>
+            <li><a href="http://localhost:8080" target="_blank">前端应用: http://localhost:8080</a></li>
+            <li><a href="http://localhost:8081/api/auth/health" target="_blank">后端健康检查: http://localhost:8081/api/auth/health</a></li>
+            <li><a href="http://localhost:8081/api/auth/login" target="_blank">后端登录API: http://localhost:8081/api/auth/login</a></li>
+        </ul>
+    </div>
+    
+    <div class="container">
+        <h2>故障排除</h2>
+        <h3>如果无法访问，请尝试：</h3>
+        <ol>
+            <li>检查防火墙设置，确保端口8080和8081是开放的</li>
+            <li>尝试使用不同的浏览器</li>
+            <li>清除浏览器缓存</li>
+            <li>检查是否使用了代理服务器</li>
+            <li>尝试使用IP地址访问: <code>http://127.0.0.1:8080</code></li>
+        </ol>
+    </div>
+    
+    <div class="container">
+        <h2>测试结果</h2>
+        <pre id="test-results"></pre>
+    </div>
+    
+    <script>
+        async function testService(url, elementId) {
+            const element = document.getElementById(elementId);
+            try {
+                const response = await fetch(url);
+                if (response.ok) {
+                    element.innerHTML = `✅ ${url} - 可访问 (状态: ${response.status})`;
+                    element.className = 'status success';
+                    return { success: true, status: response.status };
+                } else {
+                    element.innerHTML = `⚠️ ${url} - 返回错误 (状态: ${response.status})`;
+                    element.className = 'status warning';
+                    return { success: false, status: response.status };
+                }
+            } catch (error) {
+                element.innerHTML = `❌ ${url} - 无法访问 (错误: ${error.message})`;
+                element.className = 'status error';
+                return { success: false, error: error.message };
+            }
+        }
+        
+        async function testAllServices() {
+            const results = document.getElementById('test-results');
+            results.textContent = '正在测试...';
+            
+            const frontendResult = await testService('http://localhost:8080', 'frontend-status');
+            const backendResult = await testService('http://localhost:8081/api/auth/health', 'backend-status');
+            
+            let resultText = '测试完成:\n\n';
+            resultText += `前端服务: ${frontendResult.success ? '✅ 正常' : '❌ 异常'}\n`;
+            resultText += `后端服务: ${backendResult.success ? '✅ 正常' : '❌ 异常'}\n\n`;
+            
+            if (frontendResult.success && backendResult.success) {
+                resultText += '🎉 所有服务运行正常！\n';
+                resultText += '请访问: http://localhost:8080\n';
+                resultText += '测试账户: admin/admin123';
+            } else {
+                resultText += '🔧 请检查以下问题:\n';
+                if (!frontendResult.success) {
+                    resultText += `- 前端服务: ${frontendResult.error || 'HTTP ' + frontendResult.status}\n`;
+                }
+                if (!backendResult.success) {
+                    resultText += `- 后端服务: ${backendResult.error || 'HTTP ' + backendResult.status}\n`;
+                }
+                resultText += '\n请参考上面的故障排除步骤。';
+            }
+            
+            results.textContent = resultText;
+        }
+        
+        // 页面加载时自动测试
+        window.onload = testAllServices;
+    </script>
+</body>
+</html>
